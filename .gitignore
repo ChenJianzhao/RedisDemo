@@ -1,3 +1,6 @@
 .settings/
 target/
 .classpath
+.idea
+redisDemo.iml
+.DS_Store

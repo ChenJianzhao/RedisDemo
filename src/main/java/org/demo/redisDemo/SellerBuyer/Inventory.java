@@ -1,4 +1,4 @@
-package org.demo.redisDemo;
+package org.demo.redisDemo.SellerBuyer;
 
 import java.util.Calendar;
 import java.util.Date;

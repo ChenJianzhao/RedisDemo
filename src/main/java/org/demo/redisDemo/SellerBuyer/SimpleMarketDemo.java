@@ -1,4 +1,4 @@
-package org.demo.redisDemo;
+package org.demo.redisDemo.SellerBuyer;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -39,12 +39,14 @@ public class SimpleMarketDemo {
 		
 		Jedis conn = null;
 		String seller = "inventory:37";
+		int initCount = 100000;
+
 		try{
 			conn = new Jedis("localhost");
 			Pipeline pipe = conn.pipelined();
 
 			pipe.multi();
-			for(int itemid = 0;itemid<50; itemid++) {
+			for(int itemid = 0;itemid<initCount; itemid++) {
 				pipe.sadd(seller, String.valueOf(itemid));
 			}
 			pipe.exec();
@@ -66,6 +68,8 @@ public class SimpleMarketDemo {
 	static class Buyer implements Runnable {
 
 		protected int retryCounter = 0;
+		int buyCount = 100000;
+
 		SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd-hh:mm:ss");
 		
 		public void run() {
@@ -74,14 +78,15 @@ public class SimpleMarketDemo {
 			try{
 				Date buyStart = new Date(System.currentTimeMillis());
 				System.out.println("buy start: \t" + format.format(buyStart));
-				
-				for(int itemid = 0;itemid<50; itemid++) {
+
+				for(int itemid = 0;itemid<buyCount; itemid++) {
 					purchaseItem(conn,"47",itemid+"","37",1);
 				}
 				
 				Date buyEnd = new Date(System.currentTimeMillis());
 				System.out.println("buy end: \t" + format.format(buyEnd));
 				System.out.println("buy cost: \t" + (buyEnd.getTime()-buyStart.getTime()) + "ms");
+				System.out.println("avg buy cost: \t" + (buyEnd.getTime()-buyStart.getTime())/buyCount + "ms");
 				System.out.println("buy Count: \t" +  conn.scard("inventory:47"));
 				System.out.println("buy retryCounter: \t" +  retryCounter);
 				System.out.println("");
@@ -109,36 +114,42 @@ public class SimpleMarketDemo {
 			while(System.currentTimeMillis() < timeout.getTime()){
 				
 				try{
-//					pipe.watch(market, inventory, seller, buyer);
+					pipe.watch(market, inventory, seller, buyer);
 					pipe.zscore(market, item);
 					pipe.hget(buyer,"funds");
-					List<Object> result = pipe.syncAndReturnAll();
-					Double price = (Double)result.get(0);
-					int funds = Integer.parseInt((String)result.get(1));
+					List<Object> check = pipe.syncAndReturnAll();
+					Double price = (Double)check.get(1);
+					int funds = Integer.parseInt((String)check.get(2));
 					
 					if( price == null || 
 							price != null && (lprice!=price || price>funds)) {
-						retryCounter++;
-						System.out.println("retry do not have item: \t" + itemid);
-//						continue;
+//						retryCounter++;
+//						System.out.println("retry do not have item: \t" + itemid);
+						continue;
 					}else {
-//						pipe.watch(market, inventory, seller, buyer);
 						pipe.multi();
 						pipe.hincrBy(seller, "funds", price.longValue());
 						pipe.hincrBy(buyer, "funds", -price.longValue());
 						pipe.sadd(inventory,itemid);
 						pipe.zrem(market,item);
 						pipe.exec();
-						
-						System.out.println(pipe.syncAndReturnAll());
-						return true;
+
+						List<Object> result= pipe.syncAndReturnAll();
+						if(result.get(5)==null) {
+							retryCounter++;
+							continue;
+						}
+						else {
+//							System.out.println(result.get(5));
+							return true;
+						}
+
 					}
 					
 				}catch(Exception e) {
 					// retry
 					retryCounter++;
 					System.out.println("retry buy item: \t" + itemid);
-//					continue;
 				}finally{
 //					conn.disconnect();
 				}
@@ -150,8 +161,9 @@ public class SimpleMarketDemo {
 	
 	static class Seller implements Runnable {
 		
-		
 		protected int retryCounter = 0;
+		int buyCount = 100000;
+
 		SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd-hh:mm:ss");
 		
 		public void run() {
@@ -161,7 +173,7 @@ public class SimpleMarketDemo {
 				Date sellStart = new Date(System.currentTimeMillis());
 				System.out.println("sell start: \t" + format.format(sellStart));
 				
-				for(int itemid = 0;itemid<50; itemid++) {
+				for(int itemid = 0;itemid<buyCount; itemid++) {
 					listItem(conn,itemid+"","37",1);
 				}
 				
