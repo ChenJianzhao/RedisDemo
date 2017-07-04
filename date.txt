@@ -1,0 +1,19 @@
+sadd inventory:17 ItemL ItemM ItemN
+sadd inventory:27 ItemO ItemP ItemQ
+hmset users:17 name Farnk funds 43
+hmset users:27 name Bill funds 125
+
+del inventory:17
+del inventory:27
+del users:17
+del users:27
+
+
+del market:
+del inventory:37
+del inventory:47
+del users:37
+del users:47
+
+hmset users:37 name Seller funds 2000000
+hmset users:47 name Buyer funds 200000
