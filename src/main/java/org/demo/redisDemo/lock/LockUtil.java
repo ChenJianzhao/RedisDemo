@@ -82,7 +82,7 @@ public class LockUtil {
     			pipe.watch(lockkey);
     			pipe.get(lockkey);
     			List<Object> result = pipe.syncAndReturnAll();
-    			if( result.get(0).equals(identifier)) {
+    			if( result.get(1) !=null && result.get(1).equals(identifier)) {
     				pipe.multi();
     				pipe.del(lockkey);
     				pipe.exec();
@@ -90,9 +90,10 @@ public class LockUtil {
     				if(delResl.get(2) == null)
     					continue;
     				else return true;
-    			}
+    			}else
+    				return false;
     		}catch(Exception e) {
-    			continue;
+    			e.printStackTrace();
     		}
     	}
     }
