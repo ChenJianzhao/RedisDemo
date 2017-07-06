@@ -4,6 +4,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
+import org.demo.redisDemo.lock.LockUtil;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.ZParams;
@@ -24,7 +26,14 @@ public class SemaphoreDemo {
 		
 	}
 	
-	
+	/**
+	 * 获取公平信号量
+	 * @param conn
+	 * @param semname
+	 * @param limit
+	 * @param timeout
+	 * @return
+	 */
 	public static String acquireFairSemaphore(Jedis conn, String semname, Integer limit, Integer timeout) {
 		
 		if( timeout == null ) 
@@ -79,6 +88,27 @@ public class SemaphoreDemo {
 		}
 	}
 	
+	/**
+	 * 带锁的信号量请求
+	 * @param conn
+	 * @param semname
+	 * @param limit
+	 * @param timeout
+	 * @return
+	 */
+	public static String acquireFairSemaphoreWithLock(Jedis conn, String semname, Integer limit, Integer timeout) {
+		
+		String identifier = LockUtil.acquireLock(conn, semname, 3, 5);
+		if( identifier!=null ) {
+			try{
+				return acquireFairSemaphore(conn, semname, limit, timeout);
+			}finally {
+				LockUtil.releaseLock(conn, semname, identifier);
+			}
+		}
+		return null;
+	}
+	
 	public static boolean releaseFairSemaphore(Jedis conn, String semname, String identifier) {
 		Pipeline pipe = conn.pipelined();
 		pipe.multi();
@@ -101,4 +131,6 @@ public class SemaphoreDemo {
 			return true;
 		}
 	}
+	
+	
 }
