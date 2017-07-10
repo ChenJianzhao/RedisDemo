@@ -1,5 +1,6 @@
 package org.demo.redisDemo.semaphore;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
@@ -17,12 +18,19 @@ public class SemaphoreDemo {
 		Jedis conn = new Jedis("localhost");
 		
 		String semname = "semaphore:remote"; 
-		String id = acquireFairSemaphore(conn, semname, 5, 10);
-		System.out.println(id);
 		
-		System.out.println(releaseFairSemaphore(conn, semname,id));
+		List<String> ids = new ArrayList<String>();
+		for(int i=0; i<8; i++) {
+			String id = acquireFairSemaphore(conn, semname, 5, 3);
+			if(id!=null) {
+				ids.add(id);
+			}
+			System.out.println(id);
+		}
 		
-		System.out.println(refreshFairSemaphore(conn,semname,"cd72c69e-ff95-4af5-b5b6-1064045bc42c"));
+		for(String id : ids) {
+			System.out.println(releaseFairSemaphore(conn, semname,id));
+		}
 		
 	}
 	
@@ -109,6 +117,13 @@ public class SemaphoreDemo {
 		return null;
 	}
 	
+	/**
+	 * 释放信号量
+	 * @param conn
+	 * @param semname
+	 * @param identifier
+	 * @return
+	 */
 	public static boolean releaseFairSemaphore(Jedis conn, String semname, String identifier) {
 		Pipeline pipe = conn.pipelined();
 		pipe.multi();
@@ -121,6 +136,13 @@ public class SemaphoreDemo {
 		else return false;
 	}
 	
+	/**
+	 * 刷新信号量
+	 * @param conn
+	 * @param semname
+	 * @param identifier
+	 * @return
+	 */
 	public static boolean refreshFairSemaphore(Jedis conn, String semname, String identifier) {
 		// 添加成功，客户端已失去信号量
 		if( conn.zadd(semname, (double)System.currentTimeMillis(), identifier) == 1) {

@@ -9,6 +9,8 @@ del users:17
 del users:27
 
 
+## 1个卖家，1个买家
+
 del market:
 del inventory:37
 del inventory:47
@@ -17,3 +19,69 @@ del users:47
 
 hmset users:37 name Seller funds 2000000
 hmset users:47 name Buyer funds 200000
+
+
+
+## 5个卖家，1个买家
+del market:
+del inventory:35
+del inventory:36
+del inventory:37
+del inventory:38
+del inventory:39
+del inventory:47
+del users:35
+del users:36
+del users:37
+del users:38
+del users:39
+del users:47
+
+hmset users:35 name Seller funds 2000000
+hmset users:36 name Seller funds 2000000
+hmset users:37 name Seller funds 2000000
+hmset users:38 name Seller funds 2000000
+hmset users:39 name Seller funds 2000000
+hmset users:47 name Buyer funds 200000
+
+
+## 5个卖家，5个买家
+
+del market:
+del inventory:35
+del inventory:36
+del inventory:37
+del inventory:38
+del inventory:39
+del inventory:45
+del inventory:46
+del inventory:47
+del inventory:48
+del inventory:49
+del users:35
+del users:36
+del users:37
+del users:38
+del users:39
+del users:45
+del users:46
+del users:47
+del users:48
+del users:49
+
+hmset users:35 name Seller funds 2000000
+hmset users:36 name Seller funds 2000000
+hmset users:37 name Seller funds 2000000
+hmset users:38 name Seller funds 2000000
+hmset users:39 name Seller funds 2000000
+hmset users:45 name Buyer funds 200000
+hmset users:46 name Buyer funds 200000
+hmset users:47 name Buyer funds 200000
+hmset users:48 name Buyer funds 200000
+hmset users:49 name Buyer funds 200000
+
+# 信号量 
+del semaphore:remote
+del semaphore:remote:owner
+set semaphore:remote:counter 0
+
